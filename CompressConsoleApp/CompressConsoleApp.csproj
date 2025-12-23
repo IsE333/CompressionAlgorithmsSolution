@@ -7,4 +7,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\CompressionAlgorithms\CompressionAlgorithms.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SmallestCSVParser" Version="1.2.0" />
+  </ItemGroup>
+
 </Project>
