@@ -26,7 +26,7 @@ namespace CompressionAlgorithms
                 }
                 prev = current;
             }
-            return compressed.ToArray();
+            return [.. compressed];
         }
 
         public byte[] Decompress(byte[] compressedData)
@@ -38,7 +38,7 @@ namespace CompressionAlgorithms
                 byte value = compressedData[i + 1];
                 decompressed.AddRange(Enumerable.Repeat(value, count));
             }
-            return decompressed.ToArray();
+            return [.. decompressed];
         }
     }
 }
