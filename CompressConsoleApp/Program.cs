@@ -7,8 +7,8 @@ namespace CompressConsoleApp
     {
         static void Main()
         {
-
-            ExampleDeltaEncoding();
+            ExampleHuffmanCoding();
+            //ExampleDeltaEncoding();
             //ExampleRLE("aabbbccddddee");
         }
 
@@ -104,5 +104,29 @@ namespace CompressConsoleApp
             Console.WriteLine($"Output bytes match input: {resultDecompress.SequenceEqual(inputBytes)}");
             Console.WriteLine($"Output strings match input: {output.SequenceEqual(input[1..])}");
         }
+
+        static void ExampleHuffmanCoding()
+        {
+            var huffman = new HuffmanCoding();
+            var inputBytes = Encoding.UTF8.GetBytes("GGGGGDDDDDDDDDDDBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
+            var compressed = huffman.Compress(inputBytes);
+            var decompressed = huffman.Decompress(compressed);
+            var decompressedText = Encoding.UTF8.GetString(decompressed);
+
+            Console.WriteLine();
+            Console.WriteLine($"Original bytes:     {BitConverter.ToString(inputBytes).Replace("-", " ")}");
+            Console.WriteLine($"Compressed bytes:   {BitConverter.ToString(compressed).Replace("-", " ")}");
+            Console.WriteLine();
+            Console.WriteLine($"Decompressed bytes: {BitConverter.ToString(decompressed).Replace("-", " ")}");
+            Console.WriteLine($"Decompressed text:  {decompressedText}");
+            Console.WriteLine();
+            Console.WriteLine($"Original Size: {inputBytes.Length} bytes");
+            Console.WriteLine($"Compressed Size: {compressed.Length} bytes");
+
+            Console.WriteLine($"\nCompression ratio: {(double)inputBytes.Length / compressed.Length:F2}");
+            Console.WriteLine($"Output bytes match input: {decompressed.SequenceEqual(inputBytes)}");
+        }
+    
+    
     }
 }
