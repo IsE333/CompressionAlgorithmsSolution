@@ -7,82 +7,42 @@ namespace CompressConsoleApp
     {
         static void Main()
         {
+            
+            ExampleRLE("aabbbccddddee");
+            ExampleDeltaEncoding();
             ExampleHuffmanCoding();
-            //ExampleDeltaEncoding();
-            //ExampleRLE("aabbbccddddee");
-        }
-
-        static List<List<string>> CsvRead(string filePath)
-        {
-            using var sr = new StreamReader(filePath);
-            var parser = new SmallestCSV.SmallestCSVParser(sr);
-            List<string>? row = parser.ReadNextRow(removeEnclosingQuotes: false);
-            if (row == null)
-                throw new Exception("CSV file is empty");
-
-            List<List<string>> columns = [];
-            for (int i = 0; i < row.Count; i++) // Initialize lists for each column
-                columns.Add([]);
-
-            while (true)
-            {
-                if (row == null)
-                    break;
-
-                for (int i = 0; i < row.Count; i++)
-                    columns[i].Add(row[i]);
-
-                row = parser.ReadNextRow(removeEnclosingQuotes: false);
-            }
-            return columns;
+            //ExampleDeltaHuffmanCodingCombined();
         }
 
         static void ExampleRLE(string text)
         {
-            Console.WriteLine("Run Length Encoding!");
+            Console.WriteLine("----------------------RunLengthEncoding----------------------");
             var input = Encoding.UTF8.GetBytes(text);
             var rle = new RunLengthEncoding();
+
             var compressed = rle.Compress(input);
-
-            Console.WriteLine($"Original text:      {text}");
-            Console.WriteLine($"Original bytes:     {BitConverter.ToString(input).Replace("-", " ")}");
-            Console.WriteLine($"Compressed bytes:   {BitConverter.ToString(compressed).Replace("-", " ")}");
-
             var decompressed = rle.Decompress(compressed);
             var decompressedText = Encoding.UTF8.GetString(decompressed);
-            Console.WriteLine();
-            Console.WriteLine($"Decompressed bytes: {BitConverter.ToString(decompressed).Replace("-", " ")}");
-            Console.WriteLine($"Decompressed text:  {decompressedText}");
+
+            Utils.PrintInfo(input, compressed, decompressed, includeCompressedText: false);
+
         }
 
         static void ExampleDeltaEncoding()
         {
-            List<string> input = CsvRead("test1.csv")[2];
-            Console.WriteLine($"Original size: {Utils.SizeOfList(input)} bytes");
-
-            List<byte> inputBytes = [];
-            for (int i = 1; i < input.Count; i++)
-            {
-                var value = input[i].Split(".")[0].PadLeft(2, '0') + "." + input[i].Split(".")[1].PadRight(3, '0');
-                inputBytes.AddRange(Encoding.UTF8.GetBytes(value));
-            }
-
+            Console.WriteLine("------------------------DeltaEncoding------------------------");
+            List<string> input = Utils.CsvRead("test1.csv")[2]; // Only third column
+            input.RemoveAt(0); // Remove column name
+            byte[] inputBytes = Utils.FormatAndConvertToBytes(input);
+            
             DeltaEncoding delta = new(lengthLHS: 2, lengthRHS: 3);
 
-            byte[] resultCompress = delta.Compress([.. inputBytes]);
-            Console.WriteLine($"Delta Encoded result: {Encoding.UTF8.GetString(resultCompress)}");
-            Console.WriteLine($"Delta Encoded size: {resultCompress.Length} bytes");
-            Console.WriteLine("\n\n\n\n");
-
+            byte[] resultCompress = delta.Compress(inputBytes);
             byte[] resultDecompress = delta.Decompress(resultCompress);
-            Console.WriteLine($"Delta Decoded result: {Encoding.UTF8.GetString(resultDecompress)}");
-            Console.WriteLine($"Delta Decoded size: {resultDecompress.Length} bytes");
 
             List<string> outputStrings = [];
             for (int i = 0; i < resultDecompress.Length / 6; i++)
-            {
                 outputStrings.Add(Encoding.UTF8.GetString(resultDecompress[(i * 6)..(i * 6 + 6)]));
-            }
 
             List<string> output = [];
             for (int i = 0; i < outputStrings.Count; i++)
@@ -90,43 +50,83 @@ namespace CompressConsoleApp
                 string value = outputStrings[i].Split(".")[0].TrimStart('0') + "." + outputStrings[i].Split(".")[1].TrimEnd('0');
                 if (value.EndsWith('.')) value += "0";
                 output.Add(value);
-                if (input[i + 1] != output[i])
-                    Console.WriteLine($"Original: {input[i + 1]}  Output: {output[i]}");
+                if (input[i] != output[i])
+                    Console.WriteLine($"Original: {input[i]}  Output: {output[i]}");
             }
 
-            Console.WriteLine($"\nOriginal size: {Utils.SizeOfList(input)} bytes");
-            Console.WriteLine($"Input bytes size: {inputBytes.Count} bytes");
-            Console.WriteLine($"Delta Encoded size: {resultCompress.Length} bytes");
-            Console.WriteLine($"Delta Decoded size: {resultDecompress.Length} bytes");
-            Console.WriteLine($"Output bytes size: {Utils.SizeOfList(output)} bytes");
-
-            Console.WriteLine($"\nCompression ratio: {(double)Utils.SizeOfList(input) / resultCompress.Length:F2}");
+            Console.WriteLine($"Formatting:     {Utils.SizeOfList(input)} -> {inputBytes.Length} bytes");
             Console.WriteLine($"Output bytes match input: {resultDecompress.SequenceEqual(inputBytes)}");
-            Console.WriteLine($"Output strings match input: {output.SequenceEqual(input[1..])}");
+            Console.WriteLine($"Output strings match input: {output.SequenceEqual(input)}");
+            Utils.PrintInfo(inputBytes, resultCompress, resultDecompress, true, includeBytes: false, trunc: true);
         }
 
         static void ExampleHuffmanCoding()
         {
+            Console.WriteLine("-----------------------HuffmanEncoding-----------------------");
             var huffman = new HuffmanCoding();
             var inputBytes = Encoding.UTF8.GetBytes("GGGGGDDDDDDDDDDDBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
             var compressed = huffman.Compress(inputBytes);
             var decompressed = huffman.Decompress(compressed);
             var decompressedText = Encoding.UTF8.GetString(decompressed);
-
-            Console.WriteLine();
-            Console.WriteLine($"Original bytes:     {BitConverter.ToString(inputBytes).Replace("-", " ")}");
-            Console.WriteLine($"Compressed bytes:   {BitConverter.ToString(compressed).Replace("-", " ")}");
-            Console.WriteLine();
-            Console.WriteLine($"Decompressed bytes: {BitConverter.ToString(decompressed).Replace("-", " ")}");
-            Console.WriteLine($"Decompressed text:  {decompressedText}");
-            Console.WriteLine();
-            Console.WriteLine($"Original Size: {inputBytes.Length} bytes");
-            Console.WriteLine($"Compressed Size: {compressed.Length} bytes");
-
-            Console.WriteLine($"\nCompression ratio: {(double)inputBytes.Length / compressed.Length:F2}");
-            Console.WriteLine($"Output bytes match input: {decompressed.SequenceEqual(inputBytes)}");
+            Utils.PrintInfo(inputBytes, compressed, decompressed);
         }
-    
-    
+
+        static void ExampleDeltaHuffmanCodingCombined()
+        {
+            List<string> input = Utils.CsvRead("test1.csv")[2];
+            input.RemoveAt(0); // Remove column name
+            byte[] inputBytes = Utils.FormatAndConvertToBytes(input);
+
+            DeltaEncoding delta = new(lengthLHS: 2, lengthRHS: 3);
+            byte[] resultCompress = delta.Compress(inputBytes);
+            byte[] resultDecompress = delta.Decompress(resultCompress);
+
+            List<string> outputStrings = [];
+            for (int i = 0; i < resultDecompress.Length / 6; i++)
+                outputStrings.Add(Encoding.UTF8.GetString(resultDecompress[(i * 6)..(i * 6 + 6)]));
+
+            List<string> output = [];
+            for (int i = 0; i < outputStrings.Count; i++)
+            {
+                string value = outputStrings[i].Split(".")[0].TrimStart('0') + "." + outputStrings[i].Split(".")[1].TrimEnd('0');
+                if (value.EndsWith('.')) value += "0";
+                output.Add(value);
+                if (input[i] != output[i])
+                    Console.WriteLine($"Original: {input[i]}  Output: {output[i]}");
+            }
+
+            Console.WriteLine("-----------------------------OnlyRLE-----------------------------");
+            Console.WriteLine($"Formatting:     {Utils.SizeOfList(input)} -> {inputBytes.Length} bytes");
+            Console.WriteLine($"Output bytes match input: {resultDecompress.SequenceEqual(inputBytes)}");
+            Console.WriteLine($"Output strings match input: {output.SequenceEqual(input)}");
+            Utils.PrintInfo(inputBytes, resultCompress, resultDecompress, true, includeBytes: false, trunc: true);
+
+            Console.WriteLine("-----------------------OnlyHuffmanEncoding-----------------------");
+            var huffman = new HuffmanCoding();
+            var inputBytes3 = inputBytes;
+            var compressed = huffman.Compress(inputBytes3);
+            var decompressed = huffman.Decompress(compressed);
+            Utils.PrintInfo(inputBytes3, compressed, decompressed, false);
+
+            /*Console.WriteLine("--------------------RawCSVOnlyHuffmanEncoding--------------------");
+            List<byte> inputBytes4 = [];
+            for (int i = 1; i < input.Count; i++)
+            {
+                var value = input[i] + ",";
+                inputBytes4.AddRange(Encoding.UTF8.GetBytes(value));
+            }
+            compressed = huffman.Compress([.. inputBytes4]);
+            decompressed = huffman.Decompress(compressed);
+            Utils.PrintInfo([.. inputBytes4], compressed, decompressed, false);*/
+
+            Console.WriteLine("-----------------------RLE+HuffmanEncoding-----------------------");
+            var inputBytes2 = resultCompress;
+            compressed = huffman.Compress(inputBytes2);
+            decompressed = huffman.Decompress(compressed);
+            Utils.PrintInfo(inputBytes2, compressed, decompressed, false);
+            Utils.PrintInfo(inputBytes, compressed, decompressed, false);
+        }
+
+
     }
 }

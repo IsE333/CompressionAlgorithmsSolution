@@ -45,10 +45,9 @@ namespace CompressionAlgorithms
             //for (int i = 0; i < compressedBits.Count; i++)
             //    Console.Write(compressedBits[i] ? "1" : "0");
 
-            Console.WriteLine("\n\nSize Analysis:");
-            Console.WriteLine($"Huffman Codes Size: {encodedHuffmanCodes.Count}");
-            Console.WriteLine($"Compressed Size: {encodedHuffmanCodes.Count + compressedBits.Count} bits");
-            Console.WriteLine($"                 {(paddingBits.Count + encodedHuffmanCodes.Count + compressedBits.Count) / 8} bytes");
+            Console.WriteLine();
+            Console.WriteLine($"Huffman Codes Size: {encodedHuffmanCodes.Count} bits");
+            Console.WriteLine($"Padding Size:       {paddingBits.Count} bits");
 
             byte[] result = new byte[(paddingBits.Count + encodedHuffmanCodes.Count + compressedBits.Count) / 8];
             BitArray bitArray = new(paddingBits.Concat(encodedHuffmanCodes).Concat(compressedBits).ToArray());
