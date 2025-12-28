@@ -41,7 +41,10 @@ namespace CompressConsoleApp
             Console.WriteLine($" Compressed Size: {compressedBytes.Length} bytes");
             Console.WriteLine($" Compression ratio: {(double)originalBytes.Length / compressedBytes.Length:F2}");
             if (!decompressedBytes.SequenceEqual(originalBytes))
+            {
                 Console.WriteLine($" Output bytes DOES NOT match input");
+                Console.WriteLine($" Decompressed Size: {decompressedBytes.Length} bytes");
+            }
             Console.WriteLine("---------------------------------");
         }
 

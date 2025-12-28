@@ -7,11 +7,11 @@ namespace CompressConsoleApp
     {
         static void Main()
         {
-            
-            ExampleRLE("aabbbccddddee");
-            ExampleDeltaEncoding();
-            ExampleHuffmanCoding();
+            //ExampleRLE("aabbbccddddee");
+            //ExampleDeltaEncoding();
+            //ExampleHuffmanCoding();
             //ExampleDeltaHuffmanCodingCombined();
+            ExampleLZ77();
         }
 
         static void ExampleRLE(string text)
@@ -22,7 +22,6 @@ namespace CompressConsoleApp
 
             var compressed = rle.Compress(input);
             var decompressed = rle.Decompress(compressed);
-            var decompressedText = Encoding.UTF8.GetString(decompressed);
 
             Utils.PrintInfo(input, compressed, decompressed, includeCompressedText: false);
 
@@ -67,7 +66,6 @@ namespace CompressConsoleApp
             var inputBytes = Encoding.UTF8.GetBytes("GGGGGDDDDDDDDDDDBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
             var compressed = huffman.Compress(inputBytes);
             var decompressed = huffman.Decompress(compressed);
-            var decompressedText = Encoding.UTF8.GetString(decompressed);
             Utils.PrintInfo(inputBytes, compressed, decompressed);
         }
 
@@ -127,6 +125,14 @@ namespace CompressConsoleApp
             Utils.PrintInfo(inputBytes, compressed, decompressed, false);
         }
 
-
+        static void ExampleLZ77()
+        {
+            Console.WriteLine("-----------------------LempelZiv(LZ77)-----------------------");
+            var lz77 = new LZ77();
+            var inputBytes = Encoding.UTF8.GetBytes("3.141592653589793238462643383279502884197169399375105820974944592307816406286208998628034825342117067982148086513282306647093844609550582231725359408128481117450284102701938521105559644622948954930381964428810975665933446128475648233786783165271201909145648566");
+            var compressed = lz77.Compress(inputBytes);
+            var decompressed = lz77.Decompress(compressed);
+            Utils.PrintInfo(inputBytes, compressed, decompressed, includeCompressedText: false);
+        }
     }
 }
