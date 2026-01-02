@@ -7,11 +7,14 @@ namespace CompressConsoleApp
     {
         static void Main()
         {
+            Console.OutputEncoding = Encoding.UTF8;
+
             //ExampleRLE("aabbbccddddee");
             //ExampleDeltaEncoding();
             //ExampleHuffmanCoding();
             //ExampleDeltaHuffmanCodingCombined();
-            ExampleLZ77();
+            //ExampleLZ77();
+            ExampleLZW();
         }
 
         static void ExampleRLE(string text)
@@ -132,6 +135,16 @@ namespace CompressConsoleApp
             var inputBytes = Encoding.UTF8.GetBytes("uzum uzume baka baka kararir");
             var compressed = lz77.Compress(inputBytes);
             var decompressed = lz77.Decompress(compressed);
+            Utils.PrintInfo(inputBytes, compressed, decompressed, includeCompressedText: false);
+        }
+
+        static void ExampleLZW()
+        {
+            Console.WriteLine("-----------------------LempelZiv(LZw)-----------------------");
+            var lzw = new LZW();
+            var inputBytes = Encoding.UTF8.GetBytes("üzüm üzüme baka baka kararır");
+            var compressed = lzw.Compress(inputBytes);
+            var decompressed = lzw.Decompress(compressed);
             Utils.PrintInfo(inputBytes, compressed, decompressed, includeCompressedText: false);
         }
     }
