@@ -17,6 +17,17 @@ namespace CompressConsoleApp
                 return data;
             return $"{data[..TRUNC_LENGTH]} ... (total {data.Length})";
         }
+        /// <summary>
+        /// Special method to print compression info
+        /// </summary>
+        /// <param name="originalBytes">Data</param>
+        /// <param name="compressedBytes">Compression result</param>
+        /// <param name="decompressedBytes">Decompression result</param>
+        /// <param name="showData">Disable all data</param>
+        /// <param name="includeCompressedText">Disable compressed text only</param>
+        /// <param name="includeBytes">Disable original and compressed bytes</param>
+        /// <param name="includeDecompressedBytes">Disable Decompressed bytes only</param>
+        /// <param name="trunc">Truncate long lines</param>
         public static void PrintInfo(byte[] originalBytes, byte[] compressedBytes, byte[] decompressedBytes, bool showData = true, bool includeCompressedText = true, bool includeBytes = true, bool includeDecompressedBytes = false, bool trunc = false)
         {
             Console.WriteLine("---------------------------------");

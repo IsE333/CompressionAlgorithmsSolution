@@ -19,14 +19,18 @@ namespace CompressionAlgorithms
             byte[] prevBytes = [];
             for (int i = 0; i < data.Length; i++)
             {
+                int lenOfEntry = -1;
                 for (int j = searchBuffer.Count - 1; j >= 0; j--)
                 {
-                    if (i + searchBuffer[j].Length >= data.Length)
+                    if (i + searchBuffer[j].Length > data.Length)
+                        continue;
+                    if (searchBuffer[j].Length <= lenOfEntry)
                         continue;
                     if (searchBuffer[j].SequenceEqual(data[i..(i + searchBuffer[j].Length)]))
                     {
                         currentPos = j;
-                        break;
+                        lenOfEntry = searchBuffer[j].Length;
+                        //break;
                     }
                 }
 

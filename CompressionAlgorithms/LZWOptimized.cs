@@ -117,7 +117,7 @@ namespace CompressionAlgorithms
         int[] GetSearchHashArray(byte[] data, int pos)
         {
             List<int> hashes = [];
-            for (int len = 3; len >= 0; len--)
+            for (int len = 3; len > 0; len--)
             {
                 if (pos + len > data.Length)
                     continue;
