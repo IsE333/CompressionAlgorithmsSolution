@@ -1,4 +1,6 @@
 ﻿using CompressionAlgorithms;
+using System.Buffers;
+using System.Collections.Concurrent;
 using System.Text;
 
 namespace CompressConsoleApp
@@ -9,15 +11,16 @@ namespace CompressConsoleApp
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-
-            Console.WriteLine("Enter buffer size in bytes (e.g., 65536): ");
-            if (!int.TryParse(Console.ReadLine(), out int bufferSize))
-                bufferSize = 65536;
-
+            Console.WriteLine(Environment.ProcessorCount + " logical processors detected.");
+            Console.WriteLine("Leave empty for default 0.5 MB");
+            Console.WriteLine("Enter buffer size in megabytes (e.g., 4.0): ");
+            if (!double.TryParse(Console.ReadLine(), out double size))
+                size = 0.5;
+            int bufferSize = (int)(size * 1024 * 1024);
 
             var timer = new System.Diagnostics.Stopwatch();
             timer.Restart();
-            compressFile(bufferSize);
+            compressFile(bufferSize).Wait();
             timer.Stop();
             var elapsedMs = timer.ElapsedMilliseconds;
 
@@ -26,8 +29,8 @@ namespace CompressConsoleApp
             decompressFile();
             timer.Stop();
 
-            Console.WriteLine($"FILE LZW Optimized COMPRESSION Elapsed Time: {elapsedMs} ms");
-            Console.WriteLine($"FILE LZW Optimized DECompression Elapsed Time: {timer.ElapsedMilliseconds} ms");
+            Console.WriteLine($"FILE LZW Optimized Compression Elapsed Time: {elapsedMs} ms");
+            Console.WriteLine($"FILE LZW Optimized DeCompression Elapsed Time: {timer.ElapsedMilliseconds} ms");
 
 
             //ExampleRLE("aabbbccddddee");
@@ -35,6 +38,7 @@ namespace CompressConsoleApp
             //ExampleHuffmanCoding();
             //ExampleDeltaHuffmanCodingCombined();
             //ExampleLZ77();
+            /*
             timer.Restart();
             ExampleLZWOptimized(false);
             timer.Stop();
@@ -42,10 +46,9 @@ namespace CompressConsoleApp
             timer.Restart();
             ExampleLZW(false);
             timer.Stop();
-            Console.WriteLine($"Elapsed Time: {timer.ElapsedMilliseconds} ms");
+            Console.WriteLine($"Elapsed Time: {timer.ElapsedMilliseconds} ms");*/
         }
-
-        static void compressFile(int bufferSize = 65536, string inputPath = "test.txt", string outputPath = "test_lzwO_compressed.bin")
+        static async Task compressFile(int bufferSize = 65536, string inputPath = "test.txt", string outputPath = "test_lzwO_compressed.bin")
         {
             using (FileStream fsWrite = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, FileOptions.SequentialScan))
             {
@@ -53,52 +56,58 @@ namespace CompressConsoleApp
                 {
                     byte[] buffer = new byte[bufferSize];
                     int bytesRead;
-                    List<Task<byte[]>> taskList = [];
+                    ConcurrentQueue<Task<byte[]>> taskList = [];
                     bool endOfReading = false;
                     bool endOfWriting = false;
 
-                    Task.Run(() =>
+                    _ = Task.Run(() =>
                     {
-                        while (!endOfReading || taskList.Count > 0)
+                        while (!endOfReading || !taskList.IsEmpty)
                         {
-                            if (taskList.Count == 0)
+                            if (taskList.IsEmpty)
                             {
-                                Thread.Sleep(TimeSpan.FromMilliseconds(10));
+                                Task.Delay(10).Wait();
                                 continue;
                             }
-                            taskList.First().Wait();
-                            var completedTask = taskList.First().Result;
-                            fsWrite.Write(BitConverter.GetBytes((uint)completedTask.Length), 0, 4);
-                            fsWrite.Write(completedTask, 0, completedTask.Length);
-                            taskList.RemoveAt(0);
-                            fsWrite.Flush();
+                            if (taskList.TryDequeue(out var task))
+                            {
+                                task.Wait();
+                                var result = task.Result;
+                                fsWrite.Write(BitConverter.GetBytes((uint)result.Length), 0, 4);
+                                fsWrite.Write(result, 0, result.Length);
+                            }
                         }
                         fsWrite.Write(BitConverter.GetBytes((uint)0), 0, 4);
                         endOfWriting = true;
                     });
                     while ((bytesRead = fs.Read(buffer, 0, buffer.Length)) > 0)
                     {
-                        byte[] temp = new byte[bytesRead];
+                        byte[] temp = ArrayPool<byte>.Shared.Rent(bytesRead);
                         Array.Copy(buffer, 0, temp, 0, bytesRead);
-                        var lzwO = new LZWOptimized();
 
-                        taskList.Add(Task.Run(() =>
+                        while (taskList.Count >= Environment.ProcessorCount)
+                            await Task.Delay(1);
+                        
+                        taskList.Enqueue(Task.Run(() =>
                         {
-                            if (temp.Length == bufferSize)
+                            try
+                            {
+                                Console.WriteLine($"Compressing chunk {taskList.Count}");
+                                var lzwO = new LZWOptimized();
                                 return lzwO.Compress(temp);
-                            else
-                                return lzwO.Compress(temp[..temp.Length]);
-                        }));
+                            }
+                            finally
+                            {
+                                ArrayPool<byte>.Shared.Return(temp);
+                            }
+                    }));
                     }
                     endOfReading = true;
-
                     fs.Close();
-                    if (!endOfWriting)
-                    {
-                        while (!endOfWriting)
-                            Thread.Sleep(1);
-                    }
+                    while (!endOfWriting)
+                        await Task.Delay(10);
                 }
+                fsWrite.Flush();
                 fsWrite.Close();
             }
         }
@@ -138,6 +147,9 @@ namespace CompressConsoleApp
                         byte[] temp = new byte[bytesRead];
                         Array.Copy(chunk, 0, temp, 0, bytesRead);
                         var lzwO = new LZWOptimized();
+
+                        while (taskList.Count >= 16)
+                            Thread.Sleep(TimeSpan.FromMilliseconds(10));
 
                         taskList.Add(Task.Run(() =>
                         {
