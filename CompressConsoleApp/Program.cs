@@ -10,6 +10,7 @@ namespace CompressConsoleApp
         static void Main()
         {
             Console.OutputEncoding = Encoding.UTF8;
+            Console.Clear();
 
             Console.WriteLine(Environment.ProcessorCount + " logical processors detected.");
             Console.WriteLine("Leave empty for default 0.5 MB");
@@ -86,7 +87,7 @@ namespace CompressConsoleApp
                         Array.Copy(buffer, 0, temp, 0, bytesRead);
 
                         while (taskList.Count >= Environment.ProcessorCount)
-                            await Task.Delay(1);
+                            Task.Delay(1).Wait();
                         
                         taskList.Enqueue(Task.Run(() =>
                         {
@@ -105,13 +106,13 @@ namespace CompressConsoleApp
                     endOfReading = true;
                     fs.Close();
                     while (!endOfWriting)
-                        await Task.Delay(10);
+                        Task.Delay(10).Wait();
                 }
                 fsWrite.Flush();
                 fsWrite.Close();
             }
         }
-        static void decompressFile(int bufferSize = 65536, string inputPath = "test_lzwO_compressed.bin", string outputPath = "test_lzwO_DEcompressed.txt") 
+        static async Task decompressFile(int bufferSize = 65536, string inputPath = "test_lzwO_compressed.bin", string outputPath = "test_lzwO_DEcompressed.txt") 
         {
             using (FileStream fsWrite = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, FileOptions.SequentialScan))
             {
@@ -121,24 +122,25 @@ namespace CompressConsoleApp
                     fs.ReadExactly(chunkSizeBytes, 0, 4);
                     byte[] chunk = new byte[BitConverter.ToUInt32(chunkSizeBytes)];
                     int bytesRead;
-                    List<Task<byte[]>> taskList = [];
+                    ConcurrentQueue<Task<byte[]>> taskList = [];
                     bool endOfReading = false;
                     bool endOfWriting = false;
 
-                    Task.Run(() =>
+                    _ = Task.Run(() =>
                     {
                         while (!endOfReading || taskList.Count > 0)
                         {
                             if (taskList.Count == 0)
                             {
-                                Thread.Sleep(TimeSpan.FromMilliseconds(10));
+                                Task.Delay(10).Wait();
                                 continue;
                             }
-                            taskList.First().Wait();
-                            var completedTask = taskList.First().Result;
-                            fsWrite.Write(completedTask, 0, completedTask.Length);
-                            taskList.RemoveAt(0);
-                            fsWrite.Flush();
+                            if (taskList.TryDequeue(out var task))
+                            {
+                                task.Wait();
+                                var result = task.Result;
+                                fsWrite.Write(result, 0, result.Length);
+                            }
                         }
                         endOfWriting = true;
                     });
@@ -148,10 +150,10 @@ namespace CompressConsoleApp
                         Array.Copy(chunk, 0, temp, 0, bytesRead);
                         var lzwO = new LZWOptimized();
 
-                        while (taskList.Count >= 16)
-                            Thread.Sleep(TimeSpan.FromMilliseconds(10));
+                        while (taskList.Count >= Environment.ProcessorCount)
+                            Task.Delay(1).Wait();
 
-                        taskList.Add(Task.Run(() =>
+                        taskList.Enqueue(Task.Run(() =>
                         {
                             return lzwO.Decompress(temp);
                         }));
@@ -160,15 +162,9 @@ namespace CompressConsoleApp
                         chunk = new byte[BitConverter.ToUInt32(chunkSizeBytes)];
                     }
                     endOfReading = true;
-
-                    fs.Close();
-                    if (!endOfWriting)
-                    {
-                        while (!endOfWriting)
-                            Thread.Sleep(1);
-                    }
+                    while (!endOfWriting)
+                        Task.Delay(1).Wait();
                 }
-                fsWrite.Close();
             }
         }
 
