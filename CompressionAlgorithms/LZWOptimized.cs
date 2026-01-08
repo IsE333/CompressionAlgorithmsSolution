@@ -15,6 +15,8 @@ namespace CompressionAlgorithms
 
         public byte[] Compress(byte[] data)
         {
+            //var timer = System.Diagnostics.Stopwatch.StartNew();
+
             hashtable = [];
             List<bool> compressed = [];
             List<byte[]> searchBuffer = [];
@@ -103,6 +105,10 @@ namespace CompressionAlgorithms
             byte[] result = new byte[(paddingBits.Count + compressed.Count) / 8];
             BitArray bitArray = new([.. paddingBits.Concat(compressed)]);
             bitArray.CopyTo(result, 0);
+
+            //timer.Stop();
+            //Console.WriteLine($"Chunk Compression Time:   {timer.ElapsedMilliseconds} ms");
+
             return result;
         }
 
