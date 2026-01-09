@@ -7,6 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompressionAlgorithms", "Co
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CompressConsoleApp", "CompressConsoleApp\CompressConsoleApp.csproj", "{07666DDA-FE67-411E-9889-BAA74C8E8B8B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BenchmarkUI", "BenchmarkUI\BenchmarkUI.csproj", "{4BB84E54-85A2-4BF6-ADB4-4F1302481216}"
+	ProjectSection(ProjectDependencies) = postProject
+		{B67AC8E3-0A5F-401E-9E1D-AA0F0E14B13E} = {B67AC8E3-0A5F-401E-9E1D-AA0F0E14B13E}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +26,10 @@ Global
 		{07666DDA-FE67-411E-9889-BAA74C8E8B8B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07666DDA-FE67-411E-9889-BAA74C8E8B8B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{07666DDA-FE67-411E-9889-BAA74C8E8B8B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4BB84E54-85A2-4BF6-ADB4-4F1302481216}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4BB84E54-85A2-4BF6-ADB4-4F1302481216}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4BB84E54-85A2-4BF6-ADB4-4F1302481216}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4BB84E54-85A2-4BF6-ADB4-4F1302481216}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
