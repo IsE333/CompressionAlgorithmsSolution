@@ -1,6 +1,5 @@
 ﻿using CompressionAlgorithms;
-using System.Buffers;
-using System.Collections.Concurrent;
+using CompressionAlgorithms.Common;
 using System.Text;
 
 namespace CompressConsoleApp
@@ -21,13 +20,14 @@ namespace CompressConsoleApp
 
             var timer = new System.Diagnostics.Stopwatch();
             timer.Restart();
-            CompressFile<LZWOptimized>(bufferSize).Wait();
+            FileUtility.CompressFile<HuffmanCoding>(bufferSize).Wait();
+            //CompressFile<LZWOptimized>(bufferSize).Wait();
             timer.Stop();
             var elapsedMs = timer.ElapsedMilliseconds;
 
             Console.WriteLine("-------------");
             timer.Restart();
-            DecompressFile<LZWOptimized>().Wait();
+            FileUtility.DecompressFile<HuffmanCoding>().Wait();
             timer.Stop();
 
             Console.WriteLine($"FILE LZW Optimized Compression Elapsed Time: {elapsedMs} ms");
@@ -49,116 +49,6 @@ namespace CompressConsoleApp
             timer.Stop();
             Console.WriteLine($"Elapsed Time: {timer.ElapsedMilliseconds} ms");*/
         }
-        static async Task CompressFile<T>(int bufferSize = 65536, string inputPath = "test.txt", string outputPath = "test_lzwO_compressed.bin") where T : IAlgorithm, new()
-        {
-            using (FileStream fsWrite = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, FileOptions.SequentialScan))
-            {
-                using (FileStream fs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, FileOptions.SequentialScan))
-                {
-                    byte[] buffer = new byte[bufferSize];
-                    int bytesRead;
-                    BlockingCollection<Task<byte[]>> taskList = [];
-                    bool endOfWriting = false;
-
-                    _ = Task.Run(async () =>
-                    {
-                        while (!taskList.IsCompleted)
-                        {
-                            if (taskList.TryTake(out var task))
-                            {
-                                var result = await task;
-                                fsWrite.Write(BitConverter.GetBytes((uint)result.Length), 0, 4);
-                                fsWrite.Write(result, 0, result.Length);
-                            } 
-                            else
-                                await Task.Delay(1);
-                        }
-                        fsWrite.Write(BitConverter.GetBytes((uint)0), 0, 4); // EOF
-                        endOfWriting = true;
-                    });
-                    while ((bytesRead = fs.Read(buffer, 0, buffer.Length)) > 0)
-                    {
-                        int bytesReadTemp = bytesRead;
-                        byte[] temp = ArrayPool<byte>.Shared.Rent(bytesRead);
-                        Array.Copy(buffer, 0, temp, 0, bytesRead);
-
-                        while (taskList.Count >= Environment.ProcessorCount)
-                            await Task.Delay(1);
-                        
-                        taskList.Add(Task.Run(() =>
-                        {
-                            try
-                            {
-                                //Console.WriteLine($"Compressing chunk {taskList.Count}");
-                                var lzwO = new T();
-                                if (temp.Length > bytesReadTemp)
-                                    return lzwO.Compress(temp[..bytesReadTemp]);
-                                return lzwO.Compress(temp);
-                            }
-                            finally
-                            {
-                                ArrayPool<byte>.Shared.Return(temp);
-                            }
-                        }));
-                    }
-                    taskList.CompleteAdding();
-                    while (!endOfWriting)
-                        await Task.Delay(10);
-                }
-            }
-        }
-        static async Task DecompressFile<T>(int bufferSize = 65536, string inputPath = "test_lzwO_compressed.bin", string outputPath = "test_lzwO_DEcompressed.txt") where T : IAlgorithm, new()
-        {
-            using (FileStream fsWrite = new FileStream(outputPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize, FileOptions.SequentialScan))
-            {
-                using (FileStream fs = new FileStream(inputPath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize, FileOptions.SequentialScan))
-                {
-                    byte[] chunkSizeBytes = [0, 0, 0, 0];
-                    fs.ReadExactly(chunkSizeBytes, 0, 4);
-                    byte[] chunk = new byte[BitConverter.ToUInt32(chunkSizeBytes)];
-                    int bytesRead;
-                    BlockingCollection<Task<byte[]>> taskList = [];
-                    bool endOfWriting = false;
-
-                    _ = Task.Run(async () =>
-                    {
-                        while (!taskList.IsCompleted)
-                        {
-                            if (taskList.TryTake(out var task))
-                            {
-                                task.Wait();
-                                var result = task.Result;
-                                fsWrite.Write(result, 0, result.Length);
-                            } 
-                            else
-                                await Task.Delay(10);
-                        }
-                        endOfWriting = true;
-                    });
-                    while ((bytesRead = fs.Read(chunk, 0, chunk.Length)) > 0)
-                    {
-                        byte[] temp = new byte[chunk.Length];
-                        Array.Copy(chunk, 0, temp, 0, chunk.Length);
-                        var lzwO = new T();
-
-                        while (taskList.Count >= Environment.ProcessorCount)
-                            await Task.Delay(1);
-
-                        taskList.Add(Task.Run(() =>
-                        {
-                            return lzwO.Decompress(temp);
-                        }));
-
-                        fs.ReadExactly(chunkSizeBytes, 0, 4);
-                        chunk = new byte[BitConverter.ToUInt32(chunkSizeBytes)];
-                    }
-                    taskList.CompleteAdding();
-                    while (!endOfWriting)
-                        await Task.Delay(1);
-                }
-            }
-        }
-
         static void ExampleRLE(string text)
         {
             Console.WriteLine("----------------------RunLengthEncoding----------------------");

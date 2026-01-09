@@ -11,13 +11,10 @@ namespace CompressionAlgorithms
     public class LZWOptimized : IAlgorithm
     {
         const int BUFFER_LIMIT = 4095 - 255; // 12 bit
-        Dictionary<int, List<int>> hashtable = [];
 
         public byte[] Compress(byte[] data)
         {
-            //var timer = System.Diagnostics.Stopwatch.StartNew();
-
-            hashtable = [];
+            Dictionary<int, List<int>> hashtable = [];
             List<bool> compressed = [];
             List<byte[]> searchBuffer = [];
             int bufferOffset = 0;
@@ -49,7 +46,6 @@ namespace CompressionAlgorithms
                             {
                                 currentPos = index - bufferOffset;
                                 lenOfEntry = entry.Length;
-                                //break;
                             }
                         }
                         foreach (int rem in toRemove)
@@ -58,17 +54,6 @@ namespace CompressionAlgorithms
                     if (currentPos != -1)
                         break;
                 }
-                /*
-                for (int j = searchBuffer.Count - 1; j >= 0; j--)
-                {
-                    if (i + searchBuffer[j].Length >= data.Length)
-                        continue;
-                    if (searchBuffer[j].SequenceEqual(data[i..(i + searchBuffer[j].Length)]))
-                    {
-                        currentPos = j;
-                        break;
-                    }
-                }*/
 
                 int currentByte = currentPos == -1 ? data[i] : 256 + currentPos; // skip first 255
                 BitArray currentValue = new([currentByte]);
@@ -79,7 +64,13 @@ namespace CompressionAlgorithms
                 if (prevBytes.Length != 0)
                 {
                     byte[] newEntry = [.. prevBytes, currentBytes[0]];
-                    AddToHashTable(GetHash(newEntry), bufferOffset + searchBuffer.Count);
+                    
+                    //AddToHashTable(GetHash(newEntry), bufferOffset + searchBuffer.Count);
+                    if (hashtable.TryGetValue(GetHash(newEntry), out List<int>? list))
+                        list.Add(bufferOffset + searchBuffer.Count);
+                    else
+                        hashtable.Add(GetHash(newEntry), [bufferOffset + searchBuffer.Count]);
+
                     searchBuffer.Add(newEntry);
                     if (searchBuffer.Count > BUFFER_LIMIT)
                     {
@@ -89,8 +80,6 @@ namespace CompressionAlgorithms
                     i += currentBytes.Length - 1;
                 }
                 prevBytes = currentBytes;
-
-
                 currentPos = -1;
             }
 
@@ -105,10 +94,6 @@ namespace CompressionAlgorithms
             byte[] result = new byte[(paddingBits.Count + compressed.Count) / 8];
             BitArray bitArray = new([.. paddingBits.Concat(compressed)]);
             bitArray.CopyTo(result, 0);
-
-            //timer.Stop();
-            //Console.WriteLine($"Chunk Compression Time:   {timer.ElapsedMilliseconds} ms");
-
             return result;
         }
 
@@ -131,14 +116,6 @@ namespace CompressionAlgorithms
                 hashes.Add(GetHash(subArray));
             }
             return [.. hashes];
-        }
-
-        void AddToHashTable(int hash, int value)
-        {
-            if (hashtable.TryGetValue(hash, out List<int>? list))
-                list.Add(value);
-            else
-                hashtable.Add(hash, [value]);
         }
 
         public byte[] Decompress(byte[] compressedData)

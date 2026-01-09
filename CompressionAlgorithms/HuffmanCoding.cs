@@ -14,26 +14,23 @@ namespace CompressionAlgorithms
         public byte[] Compress(byte[] data)
         {
             Dictionary<byte, int> frequencyTable = [];
-            for (int i = 0; i < data.Length; i++)
-            {
-                if (frequencyTable.ContainsKey(data[i]))
-                    frequencyTable[data[i]] += 1;
+            foreach (var i in data)
+                if (frequencyTable.ContainsKey(i))
+                    frequencyTable[i] += 1;
                 else
-                    frequencyTable[data[i]] = 1;
-            }
+                    frequencyTable[i] = 1;
 
             TrieNode trieRoot = BuildTrie(frequencyTable);
             Dictionary<byte, bool[]> huffmanCodes = trieRoot.GetCodes();
-            PrintCodes(huffmanCodes);
+            //PrintCodes(huffmanCodes);
             
             List<bool> encodedHuffmanCodes = trieRoot.EncodeCodes();
-            PrintEncodedCodes(encodedHuffmanCodes);
+            //PrintEncodedCodes(encodedHuffmanCodes);
 
 
             List<bool> compressedBits = [];
-            for (int i = 0; i < data.Length; i++)
-                compressedBits.AddRange(huffmanCodes[data[i]]);
-
+            foreach (var i in data)
+                compressedBits.AddRange(huffmanCodes[i]);
 
             int size = compressedBits.Count + encodedHuffmanCodes.Count + 1;
             List<bool> paddingBits = [];
@@ -45,9 +42,9 @@ namespace CompressionAlgorithms
             //for (int i = 0; i < compressedBits.Count; i++)
             //    Console.Write(compressedBits[i] ? "1" : "0");
 
-            Console.WriteLine();
-            Console.WriteLine($"Huffman Codes Size: {encodedHuffmanCodes.Count} bits");
-            Console.WriteLine($"Padding Size:       {paddingBits.Count} bits");
+            //Console.WriteLine();
+            //Console.WriteLine($"Huffman Codes Size: {encodedHuffmanCodes.Count} bits");
+            //Console.WriteLine($"Padding Size:       {paddingBits.Count} bits");
 
             byte[] result = new byte[(paddingBits.Count + encodedHuffmanCodes.Count + compressedBits.Count) / 8];
             BitArray bitArray = new(paddingBits.Concat(encodedHuffmanCodes).Concat(compressedBits).ToArray());
@@ -117,7 +114,6 @@ namespace CompressionAlgorithms
                                 if (currentNode.Prev == null)
                                     decodingCodesDone = true;
                             }
-                            
                         }
                         else
                             throw new Exception("Invalid Huffman Code Structure");
@@ -137,51 +133,9 @@ namespace CompressionAlgorithms
                     result.Add(currentNode.Data.Value);
                     currentNode = root;
                 }
-
             }
             return [.. result];
         }
-
-        /*void temp()
-        {
-            bool decodingCodesDone = false;
-
-            Dictionary<byte, bool[]> codes = [];
-
-            Stack<bool> _currentCode = [];
-            if (!decodingCodesDone)
-            {
-                if (bitArray[i] == false)
-                {
-                    _currentCode.Push(false);
-                }
-                else
-                {
-                    BitArray byteBits = new(8);
-                    for (int j = 0; j < 8; j++)
-                        byteBits[j] = bitArray[i + 1 + j];
-                    var b = new byte[1];
-                    byteBits.CopyTo(b, 0);
-                    codes[b[0]] = _currentCode.Reverse().ToArray();
-                    while (_currentCode.Peek())
-                    {
-                        _currentCode.Pop();
-                        if (_currentCode.Count == 0)
-                            break;
-                    }
-                    if (_currentCode.Count == 0)
-                    {
-                        decodingCodesDone = true;
-                        continue;
-                    }
-
-                    _currentCode.Pop();
-                    _currentCode.Push(true);
-                    i += 8;
-                }
-                continue;
-            }
-        }*/
 
         TrieNode BuildTrie(Dictionary<byte, int> frequencyTable)
         {
