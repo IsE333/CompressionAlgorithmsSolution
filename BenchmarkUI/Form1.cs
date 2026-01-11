@@ -5,13 +5,15 @@ namespace BenchmarkUI
 {
     public partial class Form1 : Form
     {
-        private readonly string[] algorithmNames =
-        [
-            "Run-Length Encoding",
-            "Delta Encoding",
-            "Huffman Coding",
-            "Lempel-Ziv 77 (LZ77)",
-            "Lempel-Ziv-Welch (LZW)",
+        private IAlgorithm[] algorithms = [
+            new RunLengthEncoding(),
+            new DeltaEncoding(),
+            new HuffmanCoding(),
+            new LZ77(),
+            new LZW(),
+            new LZWOptimized(),
+            new LZWOptimized2(),
+            new LZWOptimized3(),
         ];
         private readonly double[] cacheSizes = [0.125, 0.25, 0.5, 1, 2, 4, 8, 16];
         public Form1()
@@ -21,10 +23,12 @@ namespace BenchmarkUI
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //listBox1.Items.AddRange(algorithmNames);
-            comboBox1.Items.AddRange(algorithmNames);
+            foreach (var a in algorithms)
+                comboBox1.Items.Add(a.AlgorithmName);
             foreach (var size in cacheSizes)
                 comboBox2.Items.Add(size.ToString());
+            comboBox1.SelectedIndex = 2;
+            comboBox2.SelectedIndex = 3;
         }
 
         private void button1_Click(object sender, EventArgs e)
@@ -40,26 +44,46 @@ namespace BenchmarkUI
         private async void button2_ClickAsync(object sender, EventArgs e)
         {
             string filePath = openFileDialog1.FileName;
+            IAlgorithm selectedAlgorithm = algorithms[comboBox1.SelectedIndex];
+            int bufferSize = (int)(cacheSizes[comboBox2.SelectedIndex] * 1024 * 1024);
 
-            if (!double.TryParse(Console.ReadLine(), out double size))
-                size = 0.5;
-            int bufferSize = (int)(size * 1024 * 1024);
+            progressBarCompression.Value = 0;
+            progressBarDecompress.Value = 0;
+            label2.Text = "";
+
+            var progressC = new Progress<int>(percent =>
+            {
+                progressBarCompression.Value = percent;
+            });
+            var progressD = new Progress<int>(percent =>
+            {
+                progressBarDecompress.Value = percent;
+            });
 
             var timer = new System.Diagnostics.Stopwatch();
             timer.Restart();
             
-            
-            await FileUtility.CompressFile<LZWOptimized>(bufferSize, filePath);
-
-
-
+            //await FileUtility.CompressFile(selectedAlgorithm.Compress, bufferSize, filePath);
+            await Task.Run(() => FileUtility.CompressFile(selectedAlgorithm.Compress, progressC, bufferSize, filePath));
             timer.Stop();
-            label2.Text = $"Compression Elapsed Time: {timer.ElapsedMilliseconds} ms";
+            label2.Text += $"Original File Size:        {new FileInfo(filePath).Length} bytes";
+            label2.Text += "\n";
+            label2.Text += $"\nCompression Elapsed Time:  {timer.ElapsedMilliseconds} ms";
+            label2.Text += $"\nCompressed File Size:      {new FileInfo("test_compressed.bin").Length} bytes";
+
 
             timer.Restart();
-            await FileUtility.DecompressFile<LZWOptimized>();
+            //await FileUtility.DecompressFile(selectedAlgorithm.Decompress);
+            await Task.Run(() => FileUtility.DecompressFile(selectedAlgorithm.Decompress, progressD));
             timer.Stop();
-            label2.Text += $"\nDeCompression Elapsed Time: {timer.ElapsedMilliseconds} ms";
+            label2.Text += "\n";
+            label2.Text += $"\nDecompression Elapsed Time: {timer.ElapsedMilliseconds} ms";
+
+            var originalBytes = File.ReadAllBytes(filePath);
+            var decompressedBytes = File.ReadAllBytes("test_decompressed.txt");
+            label2.Text += "\n";
+            label2.Text += $"\nFiles are identical:    {originalBytes.SequenceEqual(decompressedBytes)}";
+
         }
     }
 }

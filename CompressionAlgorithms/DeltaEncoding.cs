@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Text;
 
 namespace CompressionAlgorithms
 {
@@ -18,14 +14,16 @@ namespace CompressionAlgorithms
             lenRHS = lengthRHS;
         }
 
-        public byte[] Compress(byte[] data)
+        public string AlgorithmName => "Delta Encoding";
+
+        public byte[] Compress(byte[] data, int dataSize)
         {
             List<byte[]> compressedData = [];
             if (data.Length == 0) return [];
 
             compressedData.Add(data[0..stepSize]);
 
-            for (int i = stepSize; i < data.Length; i+= stepSize)
+            for (int i = stepSize; i < dataSize; i+= stepSize)
                 compressedData.Add(SubstractStrings(data[i..(i + stepSize)], data[(i - stepSize)..i] ));
             
             return [.. compressedData.SelectMany(b => b)];

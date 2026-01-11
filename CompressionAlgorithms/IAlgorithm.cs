@@ -2,7 +2,8 @@
 {
     public interface IAlgorithm
     {
-        byte[] Compress(byte[] data);
+        string AlgorithmName { get; }
+        byte[] Compress(byte[] data, int dataSize);
         byte[] Decompress(byte[] compressedData);
     }
 }

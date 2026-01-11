@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Collections;
 
 namespace CompressionAlgorithms
 {
@@ -14,23 +8,42 @@ namespace CompressionAlgorithms
         const int LEN_LIMIT = 63; // 6 bit
         const int BUFFER_SIZE = 255; // 8 bit
         const int LEN_SIZE = 15; // 4 bit
-        public byte[] Compress(byte[] data)
+        public string AlgorithmName => "LZ77";
+
+        public byte[] Compress(byte[] data, int dataSize)
         {
             List<bool> compressed = [];
             List<byte> searchBuffer = [];
             int currentLen = 0;
             int currentPos = 0;
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 0; i < dataSize; i++)
             {
                 for (int j = searchBuffer.Count - 1; j >= 0; j--)
                 {
                     if (j + currentLen == searchBuffer.Count)
                         break;
-                    if (i + currentLen == data.Length)
+                    if (i + currentLen == dataSize)
                         break;
                     if (currentLen == LEN_LIMIT)
                         break;
-                    if (searchBuffer[j..(j + currentLen + 1)].ToArray().SequenceEqual(data[i..(i + currentLen + 1)]))
+                    /*if (searchBuffer[j..(j + currentLen + 1)].ToArray().SequenceEqual(data[i..(i + currentLen + 1)]))
+                    {
+                        currentLen++;
+                        currentPos = searchBuffer.Count - j;
+                        j++;
+                    }*/
+                    bool match = true;
+                    for (int k = 0; k < currentLen + 1; k++)
+                    {
+                        if (j + k == searchBuffer.Count)
+                            break;
+                        if (data[i + k] != searchBuffer[j + k])
+                        {
+                            match = false;
+                            break;
+                        }
+                    }
+                    if (match)
                     {
                         currentLen++;
                         currentPos = searchBuffer.Count - j;
@@ -74,7 +87,7 @@ namespace CompressionAlgorithms
 
                 for (int j = 0; j < currentLen; j++)
                 {
-                    if (i + j == data.Length) break;
+                    if (i + j == dataSize) break;
                     searchBuffer.Add(data[i + j]);
                     if (searchBuffer.Count > BUFFER_LIMIT)
                         searchBuffer.RemoveAt(0);

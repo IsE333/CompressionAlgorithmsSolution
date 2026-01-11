@@ -35,6 +35,8 @@
             label2 = new Label();
             comboBox1 = new ComboBox();
             comboBox2 = new ComboBox();
+            progressBarCompression = new ProgressBar();
+            progressBarDecompress = new ProgressBar();
             SuspendLayout();
             // 
             // label1
@@ -74,7 +76,7 @@
             // label2
             // 
             label2.AutoSize = true;
-            label2.Location = new Point(198, 67);
+            label2.Location = new Point(384, 36);
             label2.Name = "label2";
             label2.Size = new Size(50, 20);
             label2.TabIndex = 4;
@@ -96,11 +98,27 @@
             comboBox2.Size = new Size(180, 28);
             comboBox2.TabIndex = 6;
             // 
+            // progressBarCompression
+            // 
+            progressBarCompression.Location = new Point(198, 66);
+            progressBarCompression.Name = "progressBarCompression";
+            progressBarCompression.Size = new Size(180, 29);
+            progressBarCompression.TabIndex = 7;
+            // 
+            // progressBarDecompress
+            // 
+            progressBarDecompress.Location = new Point(198, 102);
+            progressBarDecompress.Name = "progressBarDecompress";
+            progressBarDecompress.Size = new Size(180, 29);
+            progressBarDecompress.TabIndex = 8;
+            // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
             ClientSize = new Size(800, 450);
+            Controls.Add(progressBarDecompress);
+            Controls.Add(progressBarCompression);
             Controls.Add(comboBox2);
             Controls.Add(comboBox1);
             Controls.Add(label2);
@@ -123,5 +141,7 @@
         private Label label2;
         private ComboBox comboBox1;
         private ComboBox comboBox2;
+        private ProgressBar progressBarCompression;
+        private ProgressBar progressBarDecompress;
     }
 }

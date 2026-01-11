@@ -1,22 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace CompressionAlgorithms
+﻿namespace CompressionAlgorithms
 {
     public class RunLengthEncoding : IAlgorithm
     {
-        public byte[] Compress(byte[] data)
+        public string AlgorithmName => "Run Length Encoding";
+
+        public byte[] Compress(byte[] data, int dataSize)
         {
             var compressed = new List<byte>();
             byte prev = data[0];
             int count = 1;
-            for (int i = 1; i <= data.Length; i++)
+            for (int i = 1; i <= dataSize; i++)
             {
-                byte current = i == data.Length ? data[i - 1]: data[i];
-                if (current != prev || i == data.Length) 
+                byte current = i == dataSize ? data[i - 1]: data[i];
+                if (current != prev || i == dataSize) 
                 {
                     compressed.Add((byte)count);
                     compressed.Add(prev);

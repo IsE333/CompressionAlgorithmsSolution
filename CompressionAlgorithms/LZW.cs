@@ -1,36 +1,45 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Collections;
 
 namespace CompressionAlgorithms
 {
     public class LZW : IAlgorithm
     {
         const int BUFFER_LIMIT = 4095-255; // 12 bit
-        public byte[] Compress(byte[] data)
+
+        public string AlgorithmName => "LZW";
+
+        public byte[] Compress(byte[] data, int dataSize)
         {
             List<bool> compressed = [];
             List<byte[]> searchBuffer = [];
             int currentPos = -1;
             byte[] prevBytes = [];
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 0; i < dataSize; i++)
             {
                 int lenOfEntry = -1;
                 for (int j = searchBuffer.Count - 1; j >= 0; j--)
                 {
-                    if (i + searchBuffer[j].Length > data.Length)
+                    if (i + searchBuffer[j].Length > dataSize)
                         continue;
                     if (searchBuffer[j].Length <= lenOfEntry)
                         continue;
-                    if (searchBuffer[j].SequenceEqual(data[i..(i + searchBuffer[j].Length)]))
+                    /*if (searchBuffer[j].SequenceEqual(data[i..(i + searchBuffer[j].Length)]))
                     {
                         currentPos = j;
                         lenOfEntry = searchBuffer[j].Length;
-                        //break;
+                        break;
+                    }*/
+                    for (int k = 0; k < searchBuffer[j].Length; k++)
+                    {
+                        if (i + k >= data.Length)
+                            continue;
+                        if (data[i + k] != searchBuffer[j][k])
+                            break;
+                        if (k == searchBuffer[j].Length - 1)
+                        {
+                            currentPos = j;
+                            lenOfEntry = searchBuffer[j].Length;
+                        }
                     }
                 }
 

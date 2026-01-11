@@ -1,24 +1,20 @@
 ﻿using CompressionAlgorithms.DataStructures;
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace CompressionAlgorithms
 {
     public class HuffmanCoding : IAlgorithm
     {
-        public byte[] Compress(byte[] data)
+        public string AlgorithmName => "Huffman Coding";
+
+        public byte[] Compress(byte[] data, int dataSize)
         {
             Dictionary<byte, int> frequencyTable = [];
-            foreach (var i in data)
-                if (frequencyTable.ContainsKey(i))
-                    frequencyTable[i] += 1;
+            for (int i = 0; i < dataSize; i++)
+                if (frequencyTable.ContainsKey(data[i]))
+                    frequencyTable[data[i]] += 1;
                 else
-                    frequencyTable[i] = 1;
+                    frequencyTable[data[i]] = 1;
 
             TrieNode trieRoot = BuildTrie(frequencyTable);
             Dictionary<byte, bool[]> huffmanCodes = trieRoot.GetCodes();
@@ -29,8 +25,8 @@ namespace CompressionAlgorithms
 
 
             List<bool> compressedBits = [];
-            foreach (var i in data)
-                compressedBits.AddRange(huffmanCodes[i]);
+            for (int i = 0; i < dataSize; i++)
+                compressedBits.AddRange(huffmanCodes[data[i]]);
 
             int size = compressedBits.Count + encodedHuffmanCodes.Count + 1;
             List<bool> paddingBits = [];

@@ -19,20 +19,24 @@ namespace CompressConsoleApp
             int bufferSize = (int)(size * 1024 * 1024);
 
             var timer = new System.Diagnostics.Stopwatch();
+            var a = new LZWOptimized2();
             timer.Restart();
-            FileUtility.CompressFile<HuffmanCoding>(bufferSize).Wait();
-            //CompressFile<LZWOptimized>(bufferSize).Wait();
+            FileUtility.CompressFile(a.Compress, bufferSize).Wait();
             timer.Stop();
             var elapsedMs = timer.ElapsedMilliseconds;
 
             Console.WriteLine("-------------");
             timer.Restart();
-            FileUtility.DecompressFile<HuffmanCoding>().Wait();
+            FileUtility.DecompressFile(a.Decompress).Wait();
             timer.Stop();
 
-            Console.WriteLine($"FILE LZW Optimized Compression Elapsed Time: {elapsedMs} ms");
-            Console.WriteLine($"FILE LZW Optimized DeCompression Elapsed Time: {timer.ElapsedMilliseconds} ms");
+            Console.WriteLine($"FILE {a.AlgorithmName} Compression: {elapsedMs} ms");
+            Console.WriteLine($"FILE {a.AlgorithmName} Decompression: {timer.ElapsedMilliseconds} ms");
 
+            // check files are identical
+            var originalBytes = File.ReadAllBytes("test.txt");
+            var decompressedBytes = File.ReadAllBytes("test_decompressed.txt");
+            Console.WriteLine($"Files are identical: {originalBytes.SequenceEqual(decompressedBytes)}");
 
             //ExampleRLE("aabbbccddddee");
             //ExampleDeltaEncoding();
@@ -55,7 +59,7 @@ namespace CompressConsoleApp
             var input = Encoding.UTF8.GetBytes(text);
             var rle = new RunLengthEncoding();
 
-            var compressed = rle.Compress(input);
+            var compressed = rle.Compress(input, input.Length);
             var decompressed = rle.Decompress(compressed);
 
             Utils.PrintInfo(input, compressed, decompressed, includeCompressedText: false);
@@ -71,7 +75,7 @@ namespace CompressConsoleApp
             
             DeltaEncoding delta = new(lengthLHS: 2, lengthRHS: 3);
 
-            byte[] resultCompress = delta.Compress(inputBytes);
+            byte[] resultCompress = delta.Compress(inputBytes, inputBytes.Length);
             byte[] resultDecompress = delta.Decompress(resultCompress);
 
             List<string> outputStrings = [];
@@ -99,7 +103,7 @@ namespace CompressConsoleApp
             Console.WriteLine("-----------------------HuffmanEncoding-----------------------");
             var huffman = new HuffmanCoding();
             var inputBytes = Encoding.UTF8.GetBytes("GGGGGDDDDDDDDDDDBBBBBBBBBBBBBBCCCCCCCCCCCCCCCCCCFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
-            var compressed = huffman.Compress(inputBytes);
+            var compressed = huffman.Compress(inputBytes, inputBytes.Length);
             var decompressed = huffman.Decompress(compressed);
             Utils.PrintInfo(inputBytes, compressed, decompressed);
         }
@@ -111,7 +115,7 @@ namespace CompressConsoleApp
             byte[] inputBytes = Utils.FormatAndConvertToBytes(input);
 
             DeltaEncoding delta = new(lengthLHS: 2, lengthRHS: 3);
-            byte[] resultCompress = delta.Compress(inputBytes);
+            byte[] resultCompress = delta.Compress(inputBytes, inputBytes.Length);
             byte[] resultDecompress = delta.Decompress(resultCompress);
 
             List<string> outputStrings = [];
@@ -137,7 +141,7 @@ namespace CompressConsoleApp
             Console.WriteLine("-----------------------OnlyHuffmanEncoding-----------------------");
             var huffman = new HuffmanCoding();
             var inputBytes3 = inputBytes;
-            var compressed = huffman.Compress(inputBytes3);
+            var compressed = huffman.Compress(inputBytes3, inputBytes3.Length);
             var decompressed = huffman.Decompress(compressed);
             Utils.PrintInfo(inputBytes3, compressed, decompressed, false);
 
@@ -154,7 +158,7 @@ namespace CompressConsoleApp
 
             Console.WriteLine("-----------------------RLE+HuffmanEncoding-----------------------");
             var inputBytes2 = resultCompress;
-            compressed = huffman.Compress(inputBytes2);
+            compressed = huffman.Compress(inputBytes2, inputBytes2.Length);
             decompressed = huffman.Decompress(compressed);
             Utils.PrintInfo(inputBytes2, compressed, decompressed, false);
             Utils.PrintInfo(inputBytes, compressed, decompressed, false);
@@ -165,7 +169,7 @@ namespace CompressConsoleApp
             Console.WriteLine("-----------------------LempelZiv(LZ77)-----------------------");
             var lz77 = new LZ77();
             var inputBytes = Encoding.UTF8.GetBytes("uzum uzume baka baka kararir");
-            var compressed = lz77.Compress(inputBytes);
+            var compressed = lz77.Compress(inputBytes, inputBytes.Length);
             var decompressed = lz77.Decompress(compressed);
             Utils.PrintInfo(inputBytes, compressed, decompressed, includeCompressedText: false);
         }
@@ -176,7 +180,7 @@ namespace CompressConsoleApp
             var lzw = new LZW();
             var inputBytes = Encoding.UTF8.GetBytes("üzüm üzüme baka baka kararır");
             var timer = System.Diagnostics.Stopwatch.StartNew();
-            var compressed = lzw.Compress(inputBytes);
+            var compressed = lzw.Compress(inputBytes, inputBytes.Length);
             timer.Stop();
             var decompressed = lzw.Decompress(compressed);
             Utils.PrintInfo(inputBytes, compressed, decompressed, includeCompressedText: false, showData: showData);
@@ -188,7 +192,7 @@ namespace CompressConsoleApp
             var lzw = new LZWOptimized();
             var inputBytes = Encoding.UTF8.GetBytes("üzüm üzüme baka baka kararır");
             var timer = System.Diagnostics.Stopwatch.StartNew();
-            var compressed = lzw.Compress(inputBytes);
+            var compressed = lzw.Compress(inputBytes, inputBytes.Length);
             timer.Stop();
             var decompressed = lzw.Decompress(compressed);
             Utils.PrintInfo(inputBytes, compressed, decompressed, includeCompressedText: false, showData: showData);

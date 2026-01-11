@@ -1,18 +1,17 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+﻿using System.Collections;
 
 namespace CompressionAlgorithms
 {
+    /// <summary>
+    /// Lempel–Ziv–Welch (LZW) implementation with dictionary hashing. The search buffer is starting to slide when full (adds to end, removes from start).
+    /// </summary>
     public class LZWOptimized : IAlgorithm
     {
         const int BUFFER_LIMIT = 4095 - 255; // 12 bit
 
-        public byte[] Compress(byte[] data)
+        public string AlgorithmName => "LZW Optimized";
+
+        public byte[] Compress(byte[] data, int dataSize)
         {
             Dictionary<int, List<int>> hashtable = [];
             List<bool> compressed = [];
@@ -21,9 +20,9 @@ namespace CompressionAlgorithms
 
             int currentPos = -1;
             byte[] prevBytes = [];
-            for (int i = 0; i < data.Length; i++)
+            for (int i = 0; i < dataSize; i++)
             {
-                int[] hashes = GetSearchHashArray(data, i);
+                int[] hashes = GetSearchHashArray(data, dataSize, i);
                 foreach (int hash in hashes)
                 {
                     if (hashtable.TryGetValue(hash, out List<int>? list))
@@ -40,7 +39,7 @@ namespace CompressionAlgorithms
                             byte[] entry = searchBuffer[index - bufferOffset];
                             if (entry.Length <= lenOfEntry)
                                 continue;
-                            if (i + entry.Length > data.Length)
+                            if (i + entry.Length > dataSize)
                                 continue;
                             if (entry.SequenceEqual(data[i..(i + entry.Length)]))
                             {
@@ -97,7 +96,7 @@ namespace CompressionAlgorithms
             return result;
         }
 
-        int GetHash(byte[] arr) // first 3 bytes are used
+        static int GetHash(byte[] arr) // first 3 bytes are used
         {
             int hash = 0;
             for (int i = 0; i < Math.Min(arr.Length, 3); i++)
@@ -105,12 +104,12 @@ namespace CompressionAlgorithms
             return hash;
         }
 
-        int[] GetSearchHashArray(byte[] data, int pos)
+        int[] GetSearchHashArray(byte[] data, int dataSize, int pos)
         {
             List<int> hashes = [];
             for (int len = 3; len > 0; len--)
             {
-                if (pos + len > data.Length)
+                if (pos + len > dataSize)
                     continue;
                 byte[] subArray = data[pos..(pos + len)];
                 hashes.Add(GetHash(subArray));
@@ -153,7 +152,7 @@ namespace CompressionAlgorithms
             return [.. decompressed];
         }
 
-        byte[] ExtractBits(BitArray bitArray, int start, int len = 8, int padding = 0)
+        static byte[] ExtractBits(BitArray bitArray, int start, int len = 8, int padding = 0)
         {
             BitArray buffer = new(padding + len);
             for (int i = 0; i < padding; i++)
