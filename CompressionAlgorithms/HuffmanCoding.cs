@@ -150,7 +150,7 @@ namespace CompressionAlgorithms
             }
             TrieNode root = priorityQueue.Dequeue();
             if (root.IsLeaf)
-                root = new TrieNode(root, new TrieNode(0));
+                root = new TrieNode(root, new TrieNode((byte)(255 - root.Data.Value))); // min two nodes on root
             return root;
         }
 

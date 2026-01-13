@@ -99,15 +99,52 @@ namespace CompressConsoleApp
             return columns;
         }
 
-        public static byte[] FormatAndConvertToBytes(List<string> input)
+        /// <summary>
+        /// LHS, RHS, Leading white-space, Trailing white-space, Trailing zeros
+        public static int[] IdentifyFormat(List<string> input)
         {
-            List<byte> bytes = [];
+            int startWhiteSpace = input[0].Length - input[0].TrimStart().Length;
+            int endWhiteSpace = input[0].Length - input[0].TrimEnd().Length;
+            int[] format = [0, 0, startWhiteSpace, endWhiteSpace, 100];
+            foreach (var value in input)
+            {
+                var parts = value.Split(".");
+
+                if (parts[0].Length - startWhiteSpace > format[0])
+                    format[0] = parts[0].Length - startWhiteSpace;
+
+                if (parts.Length != 2) 
+                    continue;
+                if (parts[1].Length - endWhiteSpace > format[1])
+                    format[1] = parts[1].Length - endWhiteSpace;
+
+                if (parts[1].Length - endWhiteSpace < format[4])
+                    format[4] = parts[1].Length - endWhiteSpace;
+            }
+            if (format[1] == 0)
+                format[4] = 0;
+            return format;
+        }
+
+        public static byte[] FormatAndConvertToBytes(List<string> input, int[] format)
+        {
+            int stepSize = format[0] + format[1];
+            int lhs = format[0];
+            int rhs = format[1];
+
+            byte[] bytes = new byte[input.Count * stepSize];
+            string value;
             for (int i = 0; i < input.Count; i++)
             {
-                var value = input[i].Split(".")[0].PadLeft(2, '0') + "." + input[i].Split(".")[1].PadRight(3, '0');
-                bytes.AddRange(Encoding.UTF8.GetBytes(value));
+                if (rhs == 0)
+                    value = input[i].TrimStart().PadLeft(lhs, '0');
+                else
+                    value = input[i].Split(".")[0].TrimStart().PadLeft(lhs, '0') + input[i].Split(".")[1].TrimEnd().PadRight(rhs, '0');
+
+                for (int j = 0; j < value.Length; j++)
+                    bytes[i * stepSize + j] = (byte)value[j];
             }
-            return [.. bytes];
+            return bytes;
         }
     }
 }

@@ -7,11 +7,11 @@ namespace CompressionAlgorithms
         readonly int stepSize = 1;
         readonly int lenLHS = 1;
         readonly int lenRHS = 0;
-        public DeltaEncoding(int lengthLHS = 1, int lengthRHS = 0)
+        public DeltaEncoding(int[] format)
         {
-            stepSize = lengthRHS == 0 ? lengthLHS : lengthLHS + lengthRHS + 1;
-            lenLHS = lengthLHS;
-            lenRHS = lengthRHS;
+            stepSize = format[0] + format[1];
+            lenLHS = format[0];
+            lenRHS = format[1];
         }
 
         public string AlgorithmName => "Delta Encoding";
@@ -62,22 +62,21 @@ namespace CompressionAlgorithms
             return [.. decompressedData.SelectMany(b => b)];
         }
 
-        // 0 -> 00.000
+        // 0 -> 00000
         // TODO negative values
         public byte[] IntToByte(int value) 
         {
             string str = value.ToString();
-            str = str.PadLeft(stepSize - 1, '0');
-            str = str.Insert(lenLHS, ".");
+            str = str.PadLeft(stepSize, '0');
             return Encoding.UTF8.GetBytes(str);
         }
 
-        // 00.000 -> 0
         // 00 -> 0
+        // 00*000 -> 0
         int ByteToInt(byte[] data)
         {
             if (lenLHS == stepSize) return int.Parse(Encoding.UTF8.GetString(data[..lenLHS]));
-            return int.Parse(Encoding.UTF8.GetString(data[..lenLHS]) + Encoding.UTF8.GetString(data[(lenLHS + 1)..]));
+            return int.Parse(Encoding.UTF8.GetString(data[..lenLHS]) + Encoding.UTF8.GetString(data[lenLHS..]));
         }
 
         // 10.000 - 09.000 = +1.000

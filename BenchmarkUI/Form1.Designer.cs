@@ -28,31 +28,36 @@
         /// </summary>
         private void InitializeComponent()
         {
-            label1 = new Label();
+            labelFilePath = new Label();
             button1 = new Button();
             openFileDialog1 = new OpenFileDialog();
             button2 = new Button();
-            label2 = new Label();
-            comboBox1 = new ComboBox();
-            comboBox2 = new ComboBox();
+            labelResult = new Label();
+            comboBoxAlgorithm = new ComboBox();
+            comboBoxBlockSize = new ComboBox();
             progressBarCompression = new ProgressBar();
             progressBarDecompress = new ProgressBar();
+            label3 = new Label();
+            label4 = new Label();
+            checkedListBoxAlgorithm = new CheckedListBox();
+            label5 = new Label();
+            comboBoxAlgorithm2 = new ComboBox();
             SuspendLayout();
             // 
-            // label1
+            // labelFilePath
             // 
-            label1.AutoSize = true;
-            label1.Location = new Point(12, 9);
-            label1.Name = "label1";
-            label1.Size = new Size(50, 20);
-            label1.TabIndex = 0;
-            label1.Text = "label1";
+            labelFilePath.AutoSize = true;
+            labelFilePath.Location = new Point(12, 9);
+            labelFilePath.Name = "labelFilePath";
+            labelFilePath.Size = new Size(98, 20);
+            labelFilePath.TabIndex = 0;
+            labelFilePath.Text = "Dosya seçiniz";
             // 
             // button1
             // 
             button1.Location = new Point(12, 32);
             button1.Name = "button1";
-            button1.Size = new Size(180, 29);
+            button1.Size = new Size(261, 48);
             button1.TabIndex = 2;
             button1.Text = "Dosya Seç";
             button1.UseVisualStyleBackColor = true;
@@ -65,66 +70,115 @@
             // 
             // button2
             // 
-            button2.Location = new Point(198, 32);
+            button2.Location = new Point(279, 32);
             button2.Name = "button2";
-            button2.Size = new Size(180, 29);
+            button2.Size = new Size(164, 48);
             button2.TabIndex = 3;
             button2.Text = "Dosyayı Sıkıştır";
             button2.UseVisualStyleBackColor = false;
             button2.Click += button2_ClickAsync;
             // 
-            // label2
+            // labelResult
             // 
-            label2.AutoSize = true;
-            label2.Location = new Point(384, 36);
-            label2.Name = "label2";
-            label2.Size = new Size(50, 20);
-            label2.TabIndex = 4;
-            label2.Text = "label2";
+            labelResult.AutoSize = true;
+            labelResult.Font = new Font("Consolas", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            labelResult.Location = new Point(449, 32);
+            labelResult.Name = "labelResult";
+            labelResult.Size = new Size(65, 23);
+            labelResult.TabIndex = 4;
+            labelResult.Text = "Sonuç";
             // 
-            // comboBox1
+            // comboBoxAlgorithm
             // 
-            comboBox1.FormattingEnabled = true;
-            comboBox1.Location = new Point(12, 67);
-            comboBox1.Name = "comboBox1";
-            comboBox1.Size = new Size(180, 28);
-            comboBox1.TabIndex = 5;
+            comboBoxAlgorithm.FormattingEnabled = true;
+            comboBoxAlgorithm.Location = new Point(97, 88);
+            comboBoxAlgorithm.Name = "comboBoxAlgorithm";
+            comboBoxAlgorithm.Size = new Size(176, 28);
+            comboBoxAlgorithm.TabIndex = 5;
             // 
-            // comboBox2
+            // comboBoxBlockSize
             // 
-            comboBox2.FormattingEnabled = true;
-            comboBox2.Location = new Point(12, 101);
-            comboBox2.Name = "comboBox2";
-            comboBox2.Size = new Size(180, 28);
-            comboBox2.TabIndex = 6;
+            comboBoxBlockSize.FormattingEnabled = true;
+            comboBoxBlockSize.Location = new Point(163, 122);
+            comboBoxBlockSize.Name = "comboBoxBlockSize";
+            comboBoxBlockSize.Size = new Size(110, 28);
+            comboBoxBlockSize.TabIndex = 6;
             // 
             // progressBarCompression
             // 
-            progressBarCompression.Location = new Point(198, 66);
+            progressBarCompression.Location = new Point(279, 88);
             progressBarCompression.Name = "progressBarCompression";
-            progressBarCompression.Size = new Size(180, 29);
+            progressBarCompression.Size = new Size(164, 29);
             progressBarCompression.TabIndex = 7;
             // 
             // progressBarDecompress
             // 
-            progressBarDecompress.Location = new Point(198, 102);
+            progressBarDecompress.Location = new Point(279, 122);
             progressBarDecompress.Name = "progressBarDecompress";
-            progressBarDecompress.Size = new Size(180, 29);
+            progressBarDecompress.Size = new Size(164, 29);
             progressBarDecompress.TabIndex = 8;
+            // 
+            // label3
+            // 
+            label3.AutoSize = true;
+            label3.Location = new Point(12, 126);
+            label3.Name = "label3";
+            label3.Size = new Size(145, 20);
+            label3.TabIndex = 9;
+            label3.Text = "Blok büyüklüğü (KB):";
+            // 
+            // label4
+            // 
+            label4.AutoSize = true;
+            label4.Location = new Point(12, 92);
+            label4.Name = "label4";
+            label4.Size = new Size(79, 20);
+            label4.TabIndex = 10;
+            label4.Text = "Algoritma:";
+            // 
+            // checkedListBoxAlgorithm
+            // 
+            checkedListBoxAlgorithm.FormattingEnabled = true;
+            checkedListBoxAlgorithm.Location = new Point(12, 242);
+            checkedListBoxAlgorithm.Name = "checkedListBoxAlgorithm";
+            checkedListBoxAlgorithm.Size = new Size(162, 180);
+            checkedListBoxAlgorithm.TabIndex = 11;
+            // 
+            // label5
+            // 
+            label5.AutoSize = true;
+            label5.Location = new Point(12, 159);
+            label5.Name = "label5";
+            label5.Size = new Size(91, 20);
+            label5.TabIndex = 13;
+            label5.Text = "Algoritma 2:";
+            // 
+            // comboBoxAlgorithm2
+            // 
+            comboBoxAlgorithm2.FormattingEnabled = true;
+            comboBoxAlgorithm2.Location = new Point(109, 156);
+            comboBoxAlgorithm2.Name = "comboBoxAlgorithm2";
+            comboBoxAlgorithm2.Size = new Size(164, 28);
+            comboBoxAlgorithm2.TabIndex = 12;
             // 
             // Form1
             // 
             AutoScaleDimensions = new SizeF(8F, 20F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(800, 450);
+            ClientSize = new Size(1004, 496);
+            Controls.Add(label5);
+            Controls.Add(comboBoxAlgorithm2);
+            Controls.Add(checkedListBoxAlgorithm);
+            Controls.Add(label4);
+            Controls.Add(label3);
             Controls.Add(progressBarDecompress);
             Controls.Add(progressBarCompression);
-            Controls.Add(comboBox2);
-            Controls.Add(comboBox1);
-            Controls.Add(label2);
+            Controls.Add(comboBoxBlockSize);
+            Controls.Add(comboBoxAlgorithm);
+            Controls.Add(labelResult);
             Controls.Add(button2);
             Controls.Add(button1);
-            Controls.Add(label1);
+            Controls.Add(labelFilePath);
             Name = "Form1";
             Text = "Data Compression Algorithms Benchmark";
             Load += Form1_Load;
@@ -134,14 +188,19 @@
 
         #endregion
 
-        private Label label1;
+        private Label labelFilePath;
         private Button button1;
         private OpenFileDialog openFileDialog1;
         private Button button2;
-        private Label label2;
-        private ComboBox comboBox1;
-        private ComboBox comboBox2;
+        private Label labelResult;
+        private ComboBox comboBoxAlgorithm;
+        private ComboBox comboBoxBlockSize;
         private ProgressBar progressBarCompression;
         private ProgressBar progressBarDecompress;
+        private Label label3;
+        private Label label4;
+        private CheckedListBox checkedListBoxAlgorithm;
+        private Label label5;
+        private ComboBox comboBoxAlgorithm2;
     }
 }

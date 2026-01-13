@@ -19,15 +19,15 @@ namespace CompressConsoleApp
             int bufferSize = (int)(size * 1024 * 1024);
 
             var timer = new System.Diagnostics.Stopwatch();
-            var a = new LZWOptimized2();
+            var a = new HuffmanCoding();
             timer.Restart();
-            FileUtility.CompressFile(a.Compress, bufferSize).Wait();
+            FileUtility.CompressFile(a.Compress, null, bufferSize).Wait();
             timer.Stop();
             var elapsedMs = timer.ElapsedMilliseconds;
 
             Console.WriteLine("-------------");
             timer.Restart();
-            FileUtility.DecompressFile(a.Decompress).Wait();
+            FileUtility.DecompressFile(a.Decompress, null).Wait();
             timer.Stop();
 
             Console.WriteLine($"FILE {a.AlgorithmName} Compression: {elapsedMs} ms");
@@ -39,7 +39,7 @@ namespace CompressConsoleApp
             Console.WriteLine($"Files are identical: {originalBytes.SequenceEqual(decompressedBytes)}");
 
             //ExampleRLE("aabbbccddddee");
-            //ExampleDeltaEncoding();
+            ExampleDeltaEncoding();
             //ExampleHuffmanCoding();
             //ExampleDeltaHuffmanCodingCombined();
             //ExampleLZ77();
@@ -69,25 +69,39 @@ namespace CompressConsoleApp
         static void ExampleDeltaEncoding()
         {
             Console.WriteLine("------------------------DeltaEncoding------------------------");
-            List<string> input = Utils.CsvRead("test1.csv")[2]; // Only third column
+            List<string> input = Utils.CsvRead("test2.csv")[2]; // Only third column
             input.RemoveAt(0); // Remove column name
-            byte[] inputBytes = Utils.FormatAndConvertToBytes(input);
+            int[] format = Utils.IdentifyFormat(input);
+            byte[] inputBytes = Utils.FormatAndConvertToBytes(input, format);
             
-            DeltaEncoding delta = new(lengthLHS: 2, lengthRHS: 3);
+            DeltaEncoding delta = new(format);
 
             byte[] resultCompress = delta.Compress(inputBytes, inputBytes.Length);
             byte[] resultDecompress = delta.Decompress(resultCompress);
 
-            List<string> outputStrings = [];
-            for (int i = 0; i < resultDecompress.Length / 6; i++)
-                outputStrings.Add(Encoding.UTF8.GetString(resultDecompress[(i * 6)..(i * 6 + 6)]));
+            int stepSize = format[0] + format[1];
+            int count = resultDecompress.Length / stepSize;
+            string[] outputStrings = new string[count];
+            for (int i = 0; i < count; i++)
+                outputStrings[i] = Encoding.UTF8.GetString(resultDecompress[(i * stepSize)..(i * stepSize + stepSize)]);
 
-            List<string> output = [];
-            for (int i = 0; i < outputStrings.Count; i++)
+            string[] output = new string[count];
+            for (int i = 0; i < count; i++)
             {
-                string value = outputStrings[i].Split(".")[0].TrimStart('0') + "." + outputStrings[i].Split(".")[1].TrimEnd('0');
-                if (value.EndsWith('.')) value += "0";
-                output.Add(value);
+                string value;
+                if (format[1] == 0)
+                    value = outputStrings[i].TrimStart('0');
+                else
+                {
+                    string lhs = outputStrings[i][..format[0]].TrimStart('0');
+                    string rhs = outputStrings[i][format[0]..].TrimEnd('0');
+                    value = "".PadLeft(format[2], ' ') + lhs.PadLeft(1, '0') + "." + rhs.PadRight(format[4], '0') + "".PadRight(format[3], ' ');
+                }
+                
+                if (value.EndsWith('.')) 
+                    value += "0";
+
+                output[i] = value;
                 if (input[i] != output[i])
                     Console.WriteLine($"Original: {input[i]}  Output: {output[i]}");
             }
@@ -112,9 +126,10 @@ namespace CompressConsoleApp
         {
             List<string> input = Utils.CsvRead("test1.csv")[2];
             input.RemoveAt(0); // Remove column name
-            byte[] inputBytes = Utils.FormatAndConvertToBytes(input);
+            int[] format = Utils.IdentifyFormat(input);
+            byte[] inputBytes = Utils.FormatAndConvertToBytes(input, format);
 
-            DeltaEncoding delta = new(lengthLHS: 2, lengthRHS: 3);
+            DeltaEncoding delta = new(format);
             byte[] resultCompress = delta.Compress(inputBytes, inputBytes.Length);
             byte[] resultDecompress = delta.Decompress(resultCompress);
 

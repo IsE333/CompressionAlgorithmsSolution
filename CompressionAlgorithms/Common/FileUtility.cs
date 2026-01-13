@@ -8,7 +8,7 @@ namespace CompressionAlgorithms.Common
 {
     public static class FileUtility
     {
-        public static async Task CompressFile(Func<byte[], int, byte[]> compressMethod, IProgress<int> progress, int bufferSize = 65536, string inputPath = "test.txt", string outputPath = "test_compressed.bin")
+        public static async Task<long[]> CompressFile(Func<byte[], int, byte[]> compressMethod, IProgress<int> progress, int bufferSize = 65536, string inputPath = "test.txt", string outputPath = "test_compressed.bin")
         {
             var channelOptions = new BoundedChannelOptions(Environment.ProcessorCount*2)
             {
@@ -56,8 +56,7 @@ namespace CompressionAlgorithms.Common
             }
             channel.Writer.Complete();
             await consumerTask;
-            fsIn.Close();
-            fsOut.Close();
+            return [fsIn.Length, fsOut.Length];
         }
         public static async Task DecompressFile(Func<byte[], byte[]> decompressMethod, IProgress<int> progress, int bufferSize = 65536, string inputPath = "test_compressed.bin", string outputPath = "test_decompressed.txt")
         {
@@ -102,9 +101,6 @@ namespace CompressionAlgorithms.Common
             }
             channel.Writer.Complete();
             await consumerTask;
-            fsIn.Close();
-            fsOut.Close();
-            progress?.Report(100);
         }
     }
 }
